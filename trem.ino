@@ -6,7 +6,7 @@ controls:
 - bypass toggle on pin 8, low to trigger
 - rotary encoder on pins 2 and 3 to scroll through modes, two clicks to scroll sad!
 - speed pot on A0
-- depth pot on A1
+- depth pot on A1 unused
 
 outputs:
 - LFO signals on digital pins 5 and 6.
@@ -21,22 +21,20 @@ skittlemittle 2012
 #include <math.h>
 #include <Rotary.h>  // https://github.com/brianlow/Rotary
 
-#define NUMMODES 4
+#define NUMMODES 2
 #define DEBOUNCE_DELAY 50
 
 const int LFO1 = 5;
 const int LFO2 = 6;
 const int bypass_button = 8;
 const int speed = A0;
-const int depth = A1;
+//const int depth = A1;
 
 // status led stuff
 const int status_pins[] = {9, 10, 11}; //rgb
 const int status_colors[NUMMODES][3] = {
   {250, 0, 10}, //"pink1"
-  {250, 5, 60}, //"pink2"
   {0, 249, 30}, //"green"
-  {249, 100, 0}, //"orange"
 };
 
 /*---- state ---- */
@@ -70,43 +68,14 @@ void setup()
 /////////////////////////////////////////////////////////////////////////////////////////
 // WAVES
 /////////////////////////////////////////////////////////////////////////////////////////
-
-// Triangle wave, wow
-void triangle()
-{
-  for (int i = 0; i < 255; i++) {
-    analogWrite(LFO1, withdepth(i));
-    analogWrite(LFO2, withdepth(255 - i));
-    delay(map(analogRead(speed), 0, 1024, .01, 7));
-  }
-  for (int i = 0; i < 255; i++) {
-    analogWrite(LFO1, withdepth(255 - i));
-    analogWrite(LFO2, withdepth(i));
-    delay(map(analogRead(speed), 0, 1024, .01, 7));
-  }
-}
-
-// Sawtooth wave, 0_0
-void sawtooth()
-{
-  for (int i = 0; i < 255; i++) {
-    analogWrite(LFO1, withdepth(i));
-    analogWrite(LFO2, withdepth(255 - i));
-    delay(map(analogRead(speed), 0, 1024, .01, 7));
-  }
-  analogWrite(LFO1, withdepth(0));
-  digitalWrite(LFO2, HIGH); // fully on isnt affected by the depth control
-  delay(map(analogRead(speed), 0, 1024, 1, 10));
-}
-
 // square wave in phase
 void toggle()
 {
   digitalWrite(LFO1, HIGH);
-  analogWrite(LFO2, HIGH);
+  digitalWrite(LFO2, HIGH);
   delay(map(analogRead(speed), 0, 1024, 1, 200));
-  analogWrite(LFO1, withdepth(0));
-  digitalWrite(LFO2, withdepth(0));
+  digitalWrite(LFO1, LOW);
+  digitalWrite(LFO2, LOW);
   delay(map(analogRead(speed), 0, 1024, 1, 200));
 }
 
@@ -114,9 +83,9 @@ void toggle()
 void toggleHarmonic()
 {
   digitalWrite(LFO1, HIGH);
-  analogWrite(LFO2, withdepth(0));
+  digitalWrite(LFO2, LOW);
   delay(map(analogRead(speed), 0, 1024, 1, 200));
-  analogWrite(LFO1, withdepth(0));
+  digitalWrite(LFO1, LOW);
   digitalWrite(LFO2, HIGH);
   delay(map(analogRead(speed), 0, 1024, 1, 200));
 }
@@ -124,19 +93,6 @@ void toggleHarmonic()
 /////////////////////////////////////////////////////////////////////////////////////////
 // UTILS
 /////////////////////////////////////////////////////////////////////////////////////////
-
-// depth value, sets lower bound of LFO
-int wavedepth()
-{
-  int lowest = 160;
-  return map(analogRead(depth), 0, 1024, 0, lowest);
-}
-
-// return an analogWrite value with the depth set
-int withdepth(int val)
-{
-  return map(val, 0, 255, wavedepth(), 255);
-}
 
 // cycle throught the waves
 void nextwave(const int step) {
@@ -198,7 +154,7 @@ void ledoff()
 }
 
 // array of the wave functions
-const void (*waves[NUMMODES])() = {toggle, toggleHarmonic, triangle, sawtooth};
+const void (*waves[NUMMODES])() = {toggle, toggleHarmonic};
 
 bool bypass = true;
 void loop()
