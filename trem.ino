@@ -147,10 +147,16 @@ void displayWave(int wave)
   }
   delay(10);
 }
-void ledoff()
+void pedaloff()
 {
   for (int i = 0; i < 3; i++)
     digitalWrite(status_pins[i], HIGH);
+
+  // turn ON the LDR leds, they pass signal when light is on them
+  // for the pedal to be off its gotta just send the bloody signal
+  // so we turn em ON when its OFF
+  digitalWrite(LFO1, HIGH);
+  digitalWrite(LFO2, HIGH);
 }
 
 // array of the wave functions
@@ -167,7 +173,7 @@ void loop()
     (*waves[wave])();
     displayWave(wave);
   } else {
-    ledoff();
+    pedaloff();
   }
 }
 
